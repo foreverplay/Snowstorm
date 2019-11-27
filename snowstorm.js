@@ -33,6 +33,7 @@ var snowStorm = (function(window, document) {
   this.useTwinkleEffect = false;  // Allow snow to randomly "flicker" in and out of view while falling
   this.usePositionFixed = false;  // true = snow does not shift vertically when scrolling. May increase CPU load, disabled by default - if enabled, used only where supported
   this.usePixelPosition = false;  // Whether to use pixel values for snow top/left vs. percentages. Auto-enabled if body is position:relative or targetElement is specified.
+  this.fullpageStart = false;     // Snow is rendered start by full page when it is true
 
   // --- less-used bits ---
 
@@ -495,7 +496,7 @@ var snowStorm = (function(window, document) {
       }
     };
 
-    this.recycle = function() {
+    this.recycle = function(status) {
       s.o.style.display = 'none';
       s.o.style.position = (fixedForEverything?'fixed':'absolute');
       s.o.style.bottom = 'auto';
@@ -511,13 +512,17 @@ var snowStorm = (function(window, document) {
       s.o.style.textAlign = 'center';
       s.o.style.verticalAlign = 'baseline';
       s.x = parseInt(rnd(screenX-storm.flakeWidth-20),10);
-      s.y = parseInt(rnd(screenY)*-1,10)-storm.flakeHeight;
+      if (status) {
+        s.y = parseInt(rnd(screenY*3)*1,10)-storm.flakeHeight;
+      } else {
+        s.y = parseInt(rnd(screenY)*-1,10)-storm.flakeHeight;
+      }
       s.refresh();
       s.o.style.display = 'block';
       s.active = 1;
     };
 
-    this.recycle(); // set up x/y coords etc.
+    this.recycle(storm.fullpageStart); // set up x/y coords etc.
     this.refresh();
 
   };
@@ -561,8 +566,10 @@ var snowStorm = (function(window, document) {
     var i;
     for (i=0; i<limit; i++) {
       storm.flakes[storm.flakes.length] = new storm.SnowFlake(parseInt(rnd(flakeTypes),10));
-      if (allowInactive || i>storm.flakesMaxActive) {
-        storm.flakes[storm.flakes.length-1].active = -1;
+      if(!snowStorm.fullpageStart){ // set all active if now is rendered start by full page
+        if (allowInactive || i>storm.flakesMaxActive) {
+          storm.flakes[storm.flakes.length-1].active = -1;
+        }
       }
     }
     storm.targetElement.appendChild(docFrag);
